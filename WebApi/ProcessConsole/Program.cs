@@ -33,7 +33,7 @@ namespace ProcessConsole
                   var rabbitMqSection = hostContext.Configuration.GetSection("RabbitMq");
                   var exchangeSection = hostContext.Configuration.GetSection("RabbitMqExchange");
 
-                  var exchangeCosumerOptions = new RabbitMqExchangeOptions
+                  var exchangeProducerOptions = new RabbitMqExchangeOptions
                   {
                       Queues = new List<RabbitMqQueueOptions>
                       {
@@ -47,16 +47,22 @@ namespace ProcessConsole
 
                   services.AddRabbitMqClient(rabbitMqSection)
                       .AddConsumptionExchange("exchangeco.name", exchangeSection)
-                      .AddProductionExchange("exchangepro.name", exchangeCosumerOptions)
-                      .AddMessageHandlerTransient<DocProcessMessageHandler>("routing.key");
+                      .AddProductionExchange("exchangepro.name", exchangeProducerOptions)
+                      .AddNonCyclicMessageHandlerTransient<DocProcessMessageHandler>("routing.key");
+
 
                   services.AddDbContext<ApplicationDbContext>(opt =>
                         opt.UseNpgsql(hostContext.Configuration.GetConnectionString("DefaultConnection")));
 
                   services.AddScoped<ITempRepository, TempRepository>();
+                  services.AddScoped<IArchiveDocumentRepository, ArchiveDocumentRepository>();
+                  services.AddSingleton<IHostedService, ConsumingService>();
+
               });
+
 
             await builder.RunConsoleAsync();
         }
+
     }
 }

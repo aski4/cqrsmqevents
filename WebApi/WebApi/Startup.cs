@@ -11,7 +11,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using RabbitMQ.Client.Core.DependencyInjection;
+using RabbitMQ.Client.Core.DependencyInjection.Configuration;
+using Service;
 using Service.Handlers;
+using System.Collections.Generic;
 
 namespace WebApi
 {
@@ -60,6 +64,27 @@ namespace WebApi
 
                 return documentStore.OpenSession();
             });
+
+            var exchangeProducerOptions = new RabbitMqExchangeOptions
+            {
+                Queues = new List<RabbitMqQueueOptions>
+                      {
+                          new RabbitMqQueueOptions
+                          {
+                              Name = "console",
+                              RoutingKeys = new HashSet<string> { "routing.key" }
+                          }
+                      }
+            };
+            var rabbitMqSection = Configuration.GetSection("RabbitMq");
+            var exchangeSection = Configuration.GetSection("RabbitMqExchange");
+
+            services.AddRabbitMqClient(rabbitMqSection)
+                      .AddConsumptionExchange("exchangeco.name", exchangeSection)
+                      .AddProductionExchange("exchangepro.name", exchangeProducerOptions)
+                      .AddMessageHandlerTransient<DocWebProcessMessageHandler>("routing.key");
+
+            services.AddHostedService<ConsumingWebService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

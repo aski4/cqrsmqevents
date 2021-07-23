@@ -2,8 +2,10 @@
 using Domain.Dtos;
 using Domain.Events;
 using Domain.Models;
+using Infrastructure;
 using Infrastructure.Abstraction;
 using MediatR;
+using RabbitMQ.Client.Core.DependencyInjection.Services;
 using Service.Helpers;
 using System;
 using System.Threading;
@@ -16,32 +18,33 @@ namespace Service.Handlers
     {
         private readonly IMediator _mediator;
         private readonly ITempRepository _tempRepository;
+        private readonly IQueueService _queueService;
 
         public ProcessArchiveDocumentHandler(IMediator mediator, 
             IArchiveDocumentRepository repository,
-            ITempRepository tempRepository)
+            ITempRepository tempRepository,
+            IQueueService queueService)
         {
             _mediator = mediator ?? throw new ArgumentNullException(nameof(mediator));
             _tempRepository = tempRepository ?? throw new ArgumentNullException(nameof(tempRepository));
+            _queueService = queueService ?? throw new ArgumentNullException(nameof(queueService));
         }
 
         public async Task<VoidClassDto> Handle(ProcessArchiveDocumentCommand request, CancellationToken cancellationToken)
         {
-            //var ocr = new CoreOCR(LanguageEnum.Russian);
-            //var result = await ocr.GetTextFromBytesAsync(request.FileBytes);
-
-            //if (result is null)
-            //    throw new Exception("Unable to read the file");
-            //
-            _tempRepository.Add(new TempFile(request.FileBytes));
+            var tmpFile = new TempFile(request.FileBytes);
+            _tempRepository.Add(tmpFile);
             await _tempRepository.SaveChangesAsync();
 
-            //var archDocument = new ArchiveDocument(request.FileName, "");// result.Text);
+            var msg = new MessageMQ
+            {
+                Id = tmpFile.Id,
+                EventName = nameof(ProcessArchiveDocumentCommand)
+            };
 
-            //_repository.Add(archDocument);
-            //await _repository.SaveChangesAsync();
-            //
-            //await _mediator.Publish(new ArchiveDocumentProcessedEvent(archDocument.Id));
+            await _queueService.SendAsync(msg,
+                                    "exchangepro.name",
+                                    "routing.key");
 
             return new VoidClassDto();
         }
