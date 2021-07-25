@@ -13,7 +13,7 @@ using System.Text.Json;
 
 namespace ProcessConsole
 {
-    public class DocProcessMessageHandler : INonCyclicMessageHandler
+    public class DocProcessMessageHandler : IMessageHandler
     {
         private readonly ITempRepository _tempRepository;
         private readonly IArchiveDocumentRepository _archiveDocument;
@@ -28,40 +28,7 @@ namespace ProcessConsole
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        //public void Handle(BasicDeliverEventArgs eventArgs, string matchingRoute)
-        //{
-        //    var body = eventArgs.Body.ToArray();
-        //    var jsonString = Encoding.UTF8.GetString(body);
-
-        //    _logger.LogWarning($"Handling message {jsonString} by routing key {matchingRoute}");
-        //    var mq = JsonSerializer.Deserialize<MessageMQ>(jsonString);
-
-        //    if(mq.EventName == nameof(ProcessArchiveDocumentCommand))
-        //    {
-        //        var tmpFile = _tempRepository.GetAsync(x => x.Id == mq.Id).GetAwaiter().GetResult();
-
-        //        if (tmpFile == null)
-        //        {
-        //            _logger.LogError($"tmpFile not found id:{mq.Id}");
-        //            return;
-        //        }
-
-        //        var ocr = new CoreOCR(LanguageEnum.Russian);
-        //        var result = ocr.GetTextFromBytes(tmpFile.FileBytes);
-
-        //        _archiveDocument.Add(new Domain.Models.ArchiveDocument(tmpFile.Id, "none", result.Text));
-        //        _archiveDocument.SaveChangesAsync();
-
-        //        _tempRepository.Remove(tmpFile);
-        //        _tempRepository.SaveChangesAsync();
-
-                
-        //        _sendService.SendMessageBack(tmpFile.Id);
-        //    }
-
-        //}
-
-        public void Handle(BasicDeliverEventArgs eventArgs, string matchingRoute, IQueueService queueService)
+        public void Handle(BasicDeliverEventArgs eventArgs, string matchingRoute)
         {
             var body = eventArgs.Body.ToArray();
             var jsonString = Encoding.UTF8.GetString(body);
@@ -81,31 +48,15 @@ namespace ProcessConsole
 
                 var ocr = new CoreOCR(LanguageEnum.Russian);
                 var result = ocr.GetTextFromBytes(tmpFile.FileBytes);
-                _logger.LogError($"file processed");
-                _archiveDocument.Add(new Domain.Models.ArchiveDocument(tmpFile.Id, "none", result.Text));
-                _archiveDocument.SaveChangesAsync();
 
+                _archiveDocument.Add(new Domain.Models.ArchiveDocument(tmpFile.Id, "none", result.Text));
                 _tempRepository.Remove(tmpFile);
+
                 _tempRepository.SaveChangesAsync();
 
-
-                SendMessageBack(tmpFile.Id, queueService);
+                _logger.LogWarning($"{tmpFile.Id} file have been processed");
             }
+
         }
-
-        public void SendMessageBack(Guid id, IQueueService queueService)
-        {
-            var msg = new MessageMQ
-            {
-                Id = id,
-                EventName = nameof(ArchiveDocumentProcessedEvent)
-            };
-
-            queueService.Send(msg,
-                                 "exchangepro.name",
-                                 "routing.key");
-        }
-
-
     }
 }

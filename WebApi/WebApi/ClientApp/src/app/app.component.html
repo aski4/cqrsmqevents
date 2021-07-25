@@ -1,0 +1,20 @@
+﻿<div class="custom-file-upload">
+    <label for="file" id="lab">Сhoose File</label>
+    <input type="file" id="file" (change)="uploadFiles($event.target.files)">
+</div>
+<br />
+<button type="button" (click)="RequestUpload()">Send</button>
+
+<br />
+<div style="margin:100px 0 0 0">
+    <input type="text" id="text" #id/>
+    <br />
+    <button type="button" (click)="RequestGet(id.value)">Get</button>
+</div>
+
+<br />
+<div style="margin:10px 0 0 0">
+    <textarea [(ngModel)]="text" #textarea></textarea>
+</div>
+<br />
+<button type="button" (click)="RequestCommit(id.value)">Commit</button>

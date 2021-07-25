@@ -1,16 +1,13 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using System;
-using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
-using RabbitMQ.Client.Core.DependencyInjection;
-using Infrastructure;
-using Microsoft.EntityFrameworkCore;
+﻿using Infrastructure;
 using Infrastructure.Abstraction;
 using Infrastructure.Repository;
-using RabbitMQ.Client.Core.DependencyInjection.Configuration;
-using System.Collections.Generic;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using RabbitMQ.Client.Core.DependencyInjection;
+using System.Threading.Tasks;
 
 namespace ProcessConsole
 {
@@ -33,22 +30,10 @@ namespace ProcessConsole
                   var rabbitMqSection = hostContext.Configuration.GetSection("RabbitMq");
                   var exchangeSection = hostContext.Configuration.GetSection("RabbitMqExchange");
 
-                  var exchangeProducerOptions = new RabbitMqExchangeOptions
-                  {
-                      Queues = new List<RabbitMqQueueOptions>
-                      {
-                          new RabbitMqQueueOptions
-                          {
-                              Name = "web",
-                              RoutingKeys = new HashSet<string> { "routing.key" }
-                          }
-                      }
-                  };
 
                   services.AddRabbitMqClient(rabbitMqSection)
-                      .AddConsumptionExchange("exchangeco.name", exchangeSection)
-                      .AddProductionExchange("exchangepro.name", exchangeProducerOptions)
-                      .AddNonCyclicMessageHandlerTransient<DocProcessMessageHandler>("routing.key");
+                      .AddConsumptionExchange("myq", exchangeSection)
+                      .AddMessageHandlerSingleton<DocProcessMessageHandler>("routing.key");
 
 
                   services.AddDbContext<ApplicationDbContext>(opt =>

@@ -5,9 +5,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="ClientApp\src\app.component.ts" />
+    <None Remove="ClientApp\src\app.module.ts" />
+    <None Remove="ClientApp\src\main.ts" />
+    <None Remove="ClientApp\src\polyfills.ts" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Marten" Version="3.13.4" />
     <PackageReference Include="MediatR" Version="9.0.0" />
     <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.SpaServices.Extensions" Version="5.0.8" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.11">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
@@ -20,6 +28,13 @@
     <ProjectReference Include="..\Domain\Domain.csproj" />
     <ProjectReference Include="..\Infrastructure\Infrastructure.csproj" />
     <ProjectReference Include="..\Service\Service.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TypeScriptCompile Include="ClientApp\src\app\app.component.ts" />
+    <TypeScriptCompile Include="ClientApp\src\app\app.module.ts" />
+    <TypeScriptCompile Include="ClientApp\src\main.ts" />
+    <TypeScriptCompile Include="ClientApp\src\polyfills.ts" />
   </ItemGroup>
 
 </Project>

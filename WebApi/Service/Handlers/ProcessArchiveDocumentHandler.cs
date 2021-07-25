@@ -43,7 +43,7 @@ namespace Service.Handlers
             };
 
             await _queueService.SendAsync(msg,
-                                    "exchangepro.name",
+                                    "myq",
                                     "routing.key");
 
             return new VoidClassDto();
